@@ -1,0 +1,77 @@
+#include <Servo.h>
+
+Servo servo1; // Front-Left
+Servo servo2; // Front-Right
+Servo servo3; // Back-Left
+Servo servo4; // Back-Right
+
+// Sensor Pins
+const int trigPin = 13;
+const int echoPin = 12;
+
+// Variables for distance calculation
+long duration;
+float distanceInches;
+float stopDistance = 91.7; // Your preferred stopping distance
+
+void setup() {
+  // Servo Attachments
+  servo1.attach(6);
+  servo2.attach(9);
+  servo3.attach(10);
+  servo4.attach(11);
+
+  // Sensor Setup
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  // Initial Home Position
+  homePosition();
+  
+  Serial.begin(9600); // For monitoring the distance on your PC
+  delay(2000);
+}
+
+void homePosition() {
+  servo1.write(90);
+  servo2.write(90);
+  servo3.write(90);
+  servo4.write(90);
+}
+
+void loop() {
+  // 1. SENSING: Get distance in inches
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  
+  // Convert duration to inches (Speed of sound / 2)
+  distanceInches = (duration * 0.0135) / 2;
+
+  // 2. LOGIC: Check for obstacle
+  if (distanceInches > 0 && distanceInches <= stopDistance) {
+    homePosition(); // Stop walking and stand neutral
+    Serial.print("STOPPED - Obstacle at: ");
+    Serial.println(distanceInches);
+  } 
+  else {
+    // 3. MOVEMENT: Perform the walking sequence
+    // Diagonal Pair A
+    servo1.write(120); 
+    servo4.write(120);
+    servo2.write(60);
+    servo3.write(60);
+    delay(500);
+
+    // Diagonal Pair B
+    servo2.write(120);
+    servo3.write(120);
+    servo1.write(60);
+    servo4.write(60);
+    delay(500);
+  }
+}
